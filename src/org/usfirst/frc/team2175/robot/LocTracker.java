@@ -7,8 +7,10 @@ import edu.wpi.first.wpilibj.Encoder;
 public class LocTracker {
 	private double thetaAccumulation;
 	private double theta;
-	private double xCoord;
-	private double yCoord;
+	private double leftX;
+	private double leftY;
+	private double rightX;
+	private double rightY;
 
 	private double ticksToRadians;
 	private double widthOfBot;
@@ -16,13 +18,15 @@ public class LocTracker {
 	private double leftEncDis;
 	private double rightEncDis;
 
-	public LocTracker() {
+	public LocTracker(AHRS navX) {
 		thetaAccumulation = 0;
 		ticksToRadians = 1;
 		widthOfBot = 30;
-		theta = 0;
-		xCoord = 0;
-		yCoord = 0;
+		theta = navX.getAngle();
+		leftX = 0;
+		leftY = 0;
+		rightX = leftX;
+		rightY = leftY + widthOfBot;
 		leftEncDis = 0;
 		rightEncDis = 0;
 	}
@@ -31,13 +35,32 @@ public class LocTracker {
 		double dL = leftEncoder.getDistance() - leftEncDis;
 		leftEncDis = leftEncoder.getDistance();
 		double dR = rightEncoder.getDistance() - rightEncDis;
-		if (dL == 0 && dR == 0) {
-		} else if (dL - dR == 0) {
-
-		}
 		rightEncDis = rightEncoder.getDistance();
-		double dTheta = (dL - dR) / widthOfBot;
-		double leftRadius = widthOfBot * dL / (dL - dR);
+		if (dL == 0 && dR == 0) {
+		} else if (Math.abs(dL - dR) < 0.125) {
+			double angle = Math.toRadians(navXGyro.getAngle());
+			double xDiff = dL * Math.cos(angle);
+			double yDiff = dR * Math.sin(angle);
+			leftX += xDiff;
+			leftY += yDiff;
+			rightX += xDiff;
+			rightY += yDiff;
+		} else {
+			double dTheta = (dL - dR) / widthOfBot;
+			double leftRadius = widthOfBot * dL / (dL - dR);
+			double goingRelativeLeft = Math.signum(leftRadius);
+			leftRadius = Math.abs(leftRadius);
+			double rightRadius = leftRadius + -goingRelativeLeft * widthOfBot;
+			double angle = Math.toRadians(navXGyro.getAngle());
+			double leftXDiff = leftRadius * Math.cos(Math.toRadians(dTheta) + angle);
+			double leftYDiff = leftRadius * Math.sin(Math.toRadians(dTheta) + angle);
+			double rightXDiff = rightRadius * Math.cos(Math.toRadians(dTheta) + angle);
+			double rightYDiff = rightRadius * Math.sin(Math.toRadians(dTheta) + angle);
+			leftX += leftXDiff;
+			leftY += leftYDiff;
+			rightX += rightXDiff;
+			rightY += rightYDiff;
+		}
 
 		theta = navXGyro.getAngle();
 	}

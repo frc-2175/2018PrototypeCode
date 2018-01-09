@@ -72,7 +72,7 @@ public class Robot extends IterativeRobot {
 
 		navXGyro = new AHRS(SPI.Port.kMXP);
 
-		locTracker = new LocTracker();
+		locTracker = new LocTracker(navXGyro);
 		shouldLocTrackerReset = false;
 
 		rollerBar = new WPI_TalonSRX(14);
@@ -89,7 +89,7 @@ public class Robot extends IterativeRobot {
 	@Override
 	public void autonomousInit() {
 
-		locTracker = new LocTracker();
+		locTracker = new LocTracker(navXGyro);
 
 		m_autoSelected = m_chooser.getSelected();
 		// autoSelected = SmartDashboard.getString("Auto Selector",
@@ -115,7 +115,7 @@ public class Robot extends IterativeRobot {
 	@Override
 	public void teleopInit() {
 		if (shouldLocTrackerReset) {
-			locTracker = new LocTracker();
+			locTracker = new LocTracker(navXGyro);
 		}
 		shouldLocTrackerReset = false;
 	}
