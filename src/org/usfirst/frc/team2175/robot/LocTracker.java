@@ -3,9 +3,9 @@ package org.usfirst.frc.team2175.robot;
 import com.kauailabs.navx.frc.AHRS;
 
 import edu.wpi.first.wpilibj.Encoder;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
 public class LocTracker {
-	private double thetaAccumulation;
 	private double theta;
 	private double leftX;
 	private double leftY;
@@ -19,7 +19,6 @@ public class LocTracker {
 	private double rightEncDis;
 
 	public LocTracker(AHRS navX) {
-		thetaAccumulation = 0;
 		ticksToRadians = 1;
 		widthOfBot = 30;
 		theta = navX.getAngle();
@@ -63,6 +62,14 @@ public class LocTracker {
 		}
 
 		theta = navXGyro.getAngle();
+
+		SmartDashboard.putNumber("LeftX", leftX);
+		SmartDashboard.putNumber("RightX", rightX);
+		SmartDashboard.putNumber("LeftY", leftY);
+		SmartDashboard.putNumber("RightY", rightY);
+		SmartDashboard.putNumber("Theta", theta);
+		SmartDashboard.putNumber("", 0);
+
 	}
 
 }
