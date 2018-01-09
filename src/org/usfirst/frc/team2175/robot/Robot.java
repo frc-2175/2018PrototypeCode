@@ -7,12 +7,13 @@
 
 package org.usfirst.frc.team2175.robot;
 
-
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonSRX;
+import com.kauailabs.navx.frc.AHRS;
 
+import edu.wpi.first.wpilibj.Encoder;
 import edu.wpi.first.wpilibj.IterativeRobot;
 import edu.wpi.first.wpilibj.Joystick;
-import edu.wpi.first.wpilibj.Solenoid;
+import edu.wpi.first.wpilibj.SPI;
 import edu.wpi.first.wpilibj.drive.DifferentialDrive;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -29,21 +30,31 @@ public class Robot extends IterativeRobot {
 	private static final String kCustomAuto = "My Auto";
 	private String m_autoSelected;
 	private SendableChooser<String> m_chooser = new SendableChooser<>();
+
+	private LocTracker locTracker;
+	private boolean shouldLocTrackerReset;
+
 	private WPI_TalonSRX leftDriveMaster;
 	private WPI_TalonSRX leftDriveSlave1;
 	private WPI_TalonSRX leftDriveSlave2;
 	private WPI_TalonSRX rightDriveMaster;
 	private WPI_TalonSRX rightDriveSlave1;
 	private WPI_TalonSRX rightDriveSlave2;
+
+	private Encoder leftEncoder;
+	private Encoder rightEncoder;
 	private WPI_TalonSRX rollerBar;
 	private Joystick rightJoystick;
 	private Joystick leftJoystick;
 	private Joystick gamepad;
+
 	private DifferentialDrive robotDrive;
 
+	private AHRS navXGyro;
+
 	/**
-	 * This function is run when the robot is first started up and should be
-	 * used for any initialization code.
+	 * This function is run when the robot is first started up and should be used
+	 * for any initialization code.
 	 */
 	@Override
 	public void robotInit() {
@@ -56,6 +67,14 @@ public class Robot extends IterativeRobot {
 		rightDriveMaster = new WPI_TalonSRX(2);
 		rightDriveSlave1 = new WPI_TalonSRX(5);
 		rightDriveSlave2 = new WPI_TalonSRX(6);
+		leftEncoder = new Encoder(0, 1);
+		rightEncoder = new Encoder(2, 3);
+
+		navXGyro = new AHRS(SPI.Port.kMXP);
+
+		locTracker = new LocTracker();
+		shouldLocTrackerReset = false;
+
 		rollerBar = new WPI_TalonSRX(14);
 		leftDriveSlave1.follow(leftDriveMaster);
 		leftDriveSlave2.follow(leftDriveMaster);
@@ -66,56 +85,52 @@ public class Robot extends IterativeRobot {
 		gamepad = new Joystick(2);
 		robotDrive = new DifferentialDrive(leftDriveMaster, rightDriveMaster);
 	}
-	
-	/**
-	 * This autonomous (along with the chooser code above) shows how to select
-	 * between different autonomous modes using the dashboard. The sendable
-	 * chooser code works with the Java SmartDashboard. If you prefer the
-	 * LabVIEW Dashboard, remove all of the chooser code and uncomment the
-	 * getString line to get the auto name from the text box below the Gyro
-	 *
-	 * <p>You can add additional auto modes by adding additional comparisons to
-	 * the switch structure below with additional strings. If using the
-	 * SendableChooser make sure to add them to the chooser code above as well.
-	 */
+
 	@Override
 	public void autonomousInit() {
+
+		locTracker = new LocTracker();
+
 		m_autoSelected = m_chooser.getSelected();
 		// autoSelected = SmartDashboard.getString("Auto Selector",
 		// defaultAuto);
 		System.out.println("Auto selected: " + m_autoSelected);
 	}
 
-	/**
-	 * This function is called periodically during autonomous.
-	 */
 	@Override
 	public void autonomousPeriodic() {
+		locTracker.update(leftEncoder, rightEncoder, navXGyro);
+
 		switch (m_autoSelected) {
-			case kCustomAuto:
-				// Put custom auto code here
-				break;
-			case kDefaultAuto:
-			default:
-				// Put default auto code here
-				break;
+		case kCustomAuto:
+			// Put custom auto code here
+			break;
+		case kDefaultAuto:
+		default:
+			// Put default auto code here
+			break;
 		}
 	}
 
-	/**
-	 * This function is called periodically during operator control.
-	 */
+	@Override
+	public void teleopInit() {
+		if (shouldLocTrackerReset) {
+			locTracker = new LocTracker();
+		}
+		shouldLocTrackerReset = false;
+	}
+
 	@Override
 	public void teleopPeriodic() {
+		shouldLocTrackerReset = true;
 		robotDrive.arcadeDrive(leftJoystick.getY(), rightJoystick.getX());
-		if(gamepad.getRawButton(8)) {
+		if (gamepad.getRawButton(8)) {
 			rollerBar.set(1 - leftJoystick.getRawAxis(2));
 		}
+
+		locTracker.update(leftEncoder, rightEncoder, navXGyro);
 	}
 
-	/**
-	 * This function is called periodically during test mode.
-	 */
 	@Override
 	public void testPeriodic() {
 	}
