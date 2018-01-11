@@ -67,8 +67,9 @@ public class Robot extends IterativeRobot {
 		rightDriveMaster = new WPI_TalonSRX(2);
 		rightDriveSlave1 = new WPI_TalonSRX(5);
 		rightDriveSlave2 = new WPI_TalonSRX(6);
-		leftEncoder = new Encoder(0, 1);
-		rightEncoder = new Encoder(2, 3);
+		leftEncoder = new Encoder(2, 3);
+		rightEncoder = new Encoder(0, 1);
+		rightEncoder.setReverseDirection(true);
 
 		navXGyro = new AHRS(SPI.Port.kMXP);
 
@@ -88,8 +89,11 @@ public class Robot extends IterativeRobot {
 
 	@Override
 	public void autonomousInit() {
+		if (shouldLocTrackerReset) {
+			locTracker = new LocTracker(navXGyro);
+		}
 
-		locTracker = new LocTracker(navXGyro);
+		shouldLocTrackerReset = false;
 
 		m_autoSelected = m_chooser.getSelected();
 		// autoSelected = SmartDashboard.getString("Auto Selector",
@@ -99,6 +103,7 @@ public class Robot extends IterativeRobot {
 
 	@Override
 	public void autonomousPeriodic() {
+		// shouldLocTrackerReset = true;
 		locTracker.update(leftEncoder, rightEncoder, navXGyro);
 
 		switch (m_autoSelected) {
@@ -114,6 +119,9 @@ public class Robot extends IterativeRobot {
 
 	@Override
 	public void teleopInit() {
+		leftEncoder.reset();
+		rightEncoder.reset();
+		navXGyro.reset();
 		if (shouldLocTrackerReset) {
 			locTracker = new LocTracker(navXGyro);
 		}
