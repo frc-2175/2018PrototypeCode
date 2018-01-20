@@ -35,7 +35,7 @@ public class Robot extends IterativeRobot {
     private WPI_TalonSRX rightDriveMaster;
     private WPI_TalonSRX rightDriveSlave1;
     private WPI_TalonSRX rightDriveSlave2;
-    private WPI_TalonSRX rollerBar;
+    private WPI_TalonSRX rollerBar, leftIntake, rightIntake;
     private DoubleSolenoid intake;
     private Joystick rightJoystick;
     private Joystick leftJoystick;
@@ -58,6 +58,8 @@ public class Robot extends IterativeRobot {
         rightDriveSlave1 = new WPI_TalonSRX(5);
         rightDriveSlave2 = new WPI_TalonSRX(6);
         rollerBar = new WPI_TalonSRX(14);
+        leftIntake = new WPI_TalonSRX(15);
+        rightIntake = new WPI_TalonSRX(16);
         intake = new DoubleSolenoid(0, 1);
         leftDriveSlave1.follow(leftDriveMaster);
         leftDriveSlave2.follow(leftDriveMaster);
@@ -113,13 +115,35 @@ public class Robot extends IterativeRobot {
         robotDrive.arcadeDrive(leftJoystick.getY(), -rightJoystick.getX());
         // robotDrive.tankDrive(leftJoystick.getY(), rightJoystick.getY());
         double barSpeed = 1 - leftJoystick.getRawAxis(2);
-        if (gamepad.getRawButton(8)) {
-            rollerBar.set(-barSpeed);
-        } else if (gamepad.getRawButton(7)) {
-            rollerBar.set(barSpeed);
+        double leftSpeed = 0;
+        double rightSpeed = 0;
+        if (gamepad.getRawAxis(0) < 0) {
+            leftSpeed = gamepad.getRawAxis(0);
+            rightSpeed = gamepad.getRawAxis(0) / 2;
+
+        } else if (gamepad.getRawAxis(0) > 0) {
+            leftSpeed = gamepad.getRawAxis(0) / 2;
+            rightSpeed = gamepad.getRawAxis(0);
         } else {
-            rollerBar.set(0);
+            leftSpeed = 0;
+            rightSpeed = 0;
         }
+
+        if (gamepad.getRawButton(8)) {
+            barSpeed *= -1;
+            leftSpeed = -(leftJoystick.getThrottle() + 1) / 2;
+            rightSpeed = (rightJoystick.getThrottle() + 1) / 2;
+        } else if (gamepad.getRawButton(7)) {
+            leftSpeed = (leftJoystick.getThrottle() + 1) / 2;
+            rightSpeed = -(rightJoystick.getThrottle() + 1) / 2;
+        } else {
+            barSpeed = 0;
+        }
+
+        rollerBar.set(barSpeed);
+        leftIntake.set(leftSpeed);
+        rightIntake.set(rightSpeed);
+
         if (leftJoystick.getRawButton(1)) {
             intake.set(Value.kForward);
         } else if (rightJoystick.getRawButton(1)) {
