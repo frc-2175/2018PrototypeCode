@@ -112,7 +112,7 @@ public class Robot extends IterativeRobot {
      */
     @Override
     public void teleopPeriodic() {
-        robotDrive.arcadeDrive(leftJoystick.getY(), -rightJoystick.getX());
+        robotDrive.curvatureDrive(leftJoystick.getY(), -rightJoystick.getX(), false);
         // robotDrive.tankDrive(leftJoystick.getY(), rightJoystick.getY());
         double barSpeed = 1 - leftJoystick.getRawAxis(2);
         double leftSpeed = 0;
